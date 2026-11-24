@@ -65,6 +65,7 @@ class Command(BaseCommand):
             heure_locale = timezone.make_aware(datetime.combine(jour, time(heure, minute, seconde)))
             return Passage.objects.create(
                 badge=badge, eleve=eleve, point=point, heure_locale=heure_locale,
+                heure_corrigee=heure_locale,
                 appareil=APPAREIL, evenement_local=uuid.uuid4(),
                 etat_sync=Passage.EtatSync.VALIDE,
             )

@@ -111,3 +111,6 @@ HORLOGE_ECART_MAX_S = env.int("HORLOGE_ECART_MAX_S", default=86400)  # 24 h
 # Délai après la fin d'une fenêtre avant de déclarer une absence (laisse le temps aux
 # scans faits hors ligne d'arriver). Mettre 0 pour une démonstration.
 ABSENCE_DELAI_GRACE_S = env.int("ABSENCE_DELAI_GRACE_S", default=600)
+# --- Messages aux parents ---
+MESSAGES_MAX_PAR_ELEVE_PAR_JOUR = env.int("MESSAGES_MAX_PAR_ELEVE_PAR_JOUR", default=3)
+SMS_FOURNISSEUR = env("SMS_FOURNISSEUR", default="passages.notifications.FournisseurConsole")

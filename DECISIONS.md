@@ -112,3 +112,22 @@
 - Retenu : aucun jugement (ni hors fenêtre, ni hors itinéraire) tant qu'aucun itinéraire
   n'est rattaché à l'élève.
 - Raison : on ne peut pas dire qu'un écart existe sans référence.
+## D21 - Plafond de messages
+- Retenu : un maximum de 3 messages émis par élève, par parent et par jour (réglable). Au-delà,
+  l'anomalie est enregistrée, le message est créé avec l'état « non émis » et le motif
+  « plafond_quotidien_atteint », visible dans l'administration.
+- Écarté : supprimer ou ignorer silencieusement les messages en trop.
+- Raison : le parent ne doit pas être inondé, et le responsable doit pouvoir voir ce qui n'est pas parti.
+
+## D22 - Fournisseur de SMS
+- Retenu : une interface (FournisseurSMS) choisie par réglage (SMS_FOURNISSEUR). La version
+  livrée n'envoie rien : elle écrit dans le journal.
+- Écarté : appeler un service de SMS directement depuis le code métier.
+- Limite connue : le modèle utilisateur n'a pas de numéro de téléphone ; il faudrait l'ajouter
+  avant de brancher un vrai service.
+
+## D23 - Contenu du message
+- Retenu : prénom de l'enfant, nature de l'écart et date. Ni lieu, ni heure précise, ni nom
+  de famille, ni identifiant.
+- Raison : un SMS peut être lu par un tiers ; il faut qu'il reste compréhensible sans
+  application et sans révéler où se trouve un mineur.

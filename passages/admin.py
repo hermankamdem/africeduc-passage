@@ -12,4 +12,10 @@ class PassageAdmin(admin.ModelAdmin):
     list_filter = ("etat_sync", "appareil")
 
 
-admin.site.register([Anomalie, Badge, JournalAudit, MessageSortant, Synthese])
+@admin.register(MessageSortant)
+class MessageSortantAdmin(admin.ModelAdmin):
+    list_display = ("parent", "anomalie", "etat", "motif_non_envoi", "cree_le")
+    list_filter = ("etat", "motif_non_envoi")
+
+
+admin.site.register([Anomalie, Badge, JournalAudit, Synthese])

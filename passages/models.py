@@ -110,6 +110,13 @@ class MessageSortant(models.Model):
     etat = models.CharField(max_length=20, choices=Etat.choices, default=Etat.EN_ATTENTE)
     cree_le = models.DateTimeField(auto_now_add=True)
     motif_non_envoi = models.CharField(max_length=200, blank=True)
+class Meta:
+        constraints = [
+            # Un parent ne reçoit qu'un message par anomalie, même si la détection est rejouée.
+            models.UniqueConstraint(
+                fields=["parent", "anomalie"], name="message_unique_par_parent_et_anomalie"
+            ),
+        ]
 
 
 class Synthese(models.Model):

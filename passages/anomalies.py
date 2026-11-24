@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime, timedelta
 
 from django.conf import settings
@@ -7,8 +8,10 @@ from django.utils import timezone
 
 from school.models import Eleve, ExceptionJour, Fenetre
 
+from . import notifications
 from .models import Anomalie, Passage
 
+logger = logging.getLogger(__name__)
 DOUBLE_SCAN_S = 60
 
 
@@ -32,7 +35,6 @@ def _a_exception(eleve, jour):
         .exists()
     )
 
-
 def creer_anomalie(eleve, type_, jour, passage=None, fenetre=None):
     """Point d'entrée unique de création d'une anomalie. Idempotent."""
     try:
@@ -42,6 +44,12 @@ def creer_anomalie(eleve, type_, jour, passage=None, fenetre=None):
             )
     except IntegrityError:
         return None, False
+    if creee:
+        try:
+            with transaction.atomic():
+                notifications.creer_messages(anomalie)
+        except Exception:  # un souci de message ne doit jamais faire perdre l'anomalie
+            logger.exception("Création des messages en échec pour l'anomalie %s", anomalie.pk)
     return anomalie, creee
 
 
