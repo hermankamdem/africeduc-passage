@@ -1,0 +1,5 @@
+django>=6.1,<7
+django-environ
+argon2-cffi
+pytest
+pytest-django
