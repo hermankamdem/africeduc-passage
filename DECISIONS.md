@@ -79,3 +79,36 @@
 - Retenu : champ texte, compatible avec un lecteur de codes qui « tape » le code.
 - Non fait : lecture par la caméra et affichage d'un QR Code côté parent (à documenter
   dans le README).
+  ## D16 - Détection d'une absence de passage
+- Retenu : une commande planifiée (`detecter_absences`), exécutée chaque minute par un
+  planificateur (cron, Planificateur de tâches Windows) ou avec `--boucle`. À chaque passe,
+  elle cherche les fenêtres closes sans passage validé dans la fenêtre et crée l'anomalie.
+  Elle est rejouable : une contrainte d'unicité en base empêche les doublons.
+- Écartés : calculer l'absence à l'ouverture d'une page (personne n'ouvre l'application),
+  et une file de tâches type Celery (trop lourd pour ce périmètre).
+- Limite connue : si le planificateur s'arrête, les absences sont rattrapées avec
+  `--rattrapage N`, mais pas automatiquement.
+
+## D17 - Délai de grâce avant de déclarer une absence
+- Retenu : 10 minutes après la fin de la fenêtre (réglable), pour laisser arriver les scans
+  faits hors ligne.
+- Écarté : déclarer l'absence à la seconde où la fenêtre se ferme.
+- Raison : sinon un portail sans réseau génèrerait de fausses absences, et donc de faux
+  messages aux parents. Limite connue : un lot très tardif peut quand même arriver après.
+
+## D18 - Jours d'exception et badge inactif
+- Retenu : une exception suspend toutes les anomalies de la journée, sauf « badge suspendu,
+  perdu ou révoqué présenté ».
+- Raison : un badge déclaré perdu qui est scanné est un signal de sécurité, pas un écart
+  d'horaire. C'est un écart volontaire par rapport à la lettre de l'énoncé.
+
+## D19 - Double scan
+- Retenu : deux scans validés du même badge à moins de 60 s ; l'anomalie porte sur le
+  deuxième (heure corrigée), même si les lots arrivent dans le désordre.
+- Écarté : comparer l'heure d'arrivée au serveur.
+- Raison : en mode hors ligne, l'ordre d'arrivée ne reflète pas l'ordre des scans.
+
+## D20 - Élève sans itinéraire
+- Retenu : aucun jugement (ni hors fenêtre, ni hors itinéraire) tant qu'aucun itinéraire
+  n'est rattaché à l'élève.
+- Raison : on ne peut pas dire qu'un écart existe sans référence.

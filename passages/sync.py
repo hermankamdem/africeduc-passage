@@ -9,8 +9,11 @@ from django.utils import timezone
 
 from school.models import PointControle
 
-from . import badges
+import logging
+
+from . import anomalies, badges
 from .models import Passage
+logger = logging.getLogger(__name__)
 
 TAILLE_MAX_LOT = 200
 AGE_MAX = timedelta(days=7)
@@ -111,6 +114,7 @@ def _traiter_scan(s, appareil, ecart_s, maintenant):
             motif = "trop_ancien"
 
     heure_locale = datetime.fromtimestamp(s["heure_locale_ms"] / 1000, tz=dt_timezone.utc)
+    cree = True
     try:
         with transaction.atomic():
             passage = Passage.objects.create(
@@ -126,9 +130,16 @@ def _traiter_scan(s, appareil, ecart_s, maintenant):
                 motif_rejet=motif,
             )
     except IntegrityError:  # deux envois simultanés du même scan
+        cree = False
         passage = Passage.objects.get(appareil=appareil, evenement_local=ev)
-    return resultat(_statut(passage))
 
+    if cree:
+        try:
+            with transaction.atomic():
+                anomalies.evaluer_passage(passage)
+        except Exception:  # un défaut de détection ne doit jamais faire perdre un passage
+            logger.exception("Détection d'anomalies en échec pour le passage %s", passage.pk)
+    return resultat(_statut(passage))
 
 def traiter_lot(donnees, maintenant=None):
     appareil, envoye_ms, scans = _valider(donnees)
