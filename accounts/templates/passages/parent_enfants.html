@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block contenu %}
+<h1>Mes enfants</h1>
+<ul>
+{% for e in enfants %}
+  <li><a href="{% url 'parent_enfant_detail' e.id %}">{{ e.nom }}</a> ({{ e.classe }})</li>
+{% empty %}
+  <li>Aucun enfant rattaché.</li>
+{% endfor %}
+</ul>
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block contenu %}
+<h1>Anomalies</h1>
+<ul>
+{% for a in anomalies %}
+  <li>{{ a.date|date:"d/m/Y" }} - {{ a.eleve.nom }} - {{ a.get_type_display }}</li>
+{% empty %}<li>Aucune anomalie.</li>{% endfor %}
+</ul>
+{% endblock %}

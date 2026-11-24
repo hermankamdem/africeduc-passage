@@ -36,3 +36,20 @@
 ## D7 - Un seul badge actif par élève
 - Retenu : contrainte d'unicité conditionnelle en base.
 - Raison : une réémission invalide l'ancien badge, garanti par la base et non par le code seul.
+## D8 - Limitation des tentatives de connexion
+- Retenu : compteur d'échecs par couple (identifiant, adresse IP) dans le cache, blocage
+  après 5 échecs pendant 15 minutes, paramétrable par variables d'environnement.
+- Écarté : blocage par identifiant seul.
+- Raison : un attaquant pourrait verrouiller le compte de n'importe quel parent.
+  Limite connue : le cache en mémoire est propre à un processus ; en production il faudrait
+  Redis ou la base.
+
+## D9 - Accès à l'élève d'un autre parent
+- Retenu : réponse 404 (l'élève est cherché uniquement parmi les enfants du parent connecté).
+- Écarté : réponse 403.
+- Raison : un 403 confirmerait à un curieux que cet identifiant existe.
+
+## D10 - Contrôle des rôles
+- Retenu : un décorateur unique `role_requis` appliqué à chaque vue, côté serveur.
+- Écarté : masquer des boutons dans l'interface.
+- Raison : l'interface n'est pas une barrière ; chaque vue vérifie le rôle elle-même.

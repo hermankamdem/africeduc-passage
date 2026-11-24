@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titre %}Passage{% endblock %}</title>
+</head>
+<body>
+{% if user.is_authenticated %}
+  <form method="post" action="{% url 'deconnexion' %}">
+    {% csrf_token %}
+    <span>{{ user.username }} ({{ user.get_role_display }})</span>
+    <button type="submit">Se déconnecter</button>
+  </form>
+{% endif %}
+{% block contenu %}{% endblock %}
+</body>
+</html>

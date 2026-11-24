@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block contenu %}
+<h1>Élèves</h1>
+<ul>
+{% for e in eleves %}<li>{{ e.nom }} - {{ e.classe }} ({{ e.etablissement.nom }})</li>{% endfor %}
+</ul>
+<p><a href="{% url 'responsable_anomalies' %}">Voir les anomalies</a></p>
+{% endblock %}
