@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block contenu %}
+<h1>Élèves</h1>
+<ul>
+{% for e in eleves %}
+  <li>{{ e.nom }} - {{ e.classe }} ({{ e.etablissement.nom }})
+    <form method="post" action="{% url 'responsable_emettre_badge' e.id %}" style="display:inline">
+      {% csrf_token %}<button type="submit">Émettre / réémettre un badge</button>
+    </form>
+    <ul>
+    {% for b in e.badges.all %}
+      <li>Badge du {{ b.emis_le|date:"d/m/Y H:i" }} : {{ b.get_etat_display }}
+        {% if b.etat != "revoque" %}
+        <form method="post" action="{% url 'responsable_changer_etat_badge' b.id %}" style="display:inline">
+          {% csrf_token %}
+          <select name="etat">
+            <option value="actif">Actif</option>
+            <option value="suspendu">Suspendu</option>
+            <option value="perdu">Perdu</option>
+            <option value="revoque">Révoqué</option>
+          </select>
+          <button type="submit">Changer</button>
+        </form>
+        {% endif %}
+      </li>
+    {% endfor %}
+    </ul>
+  </li>
+{% endfor %}
+</ul>
+<p><a href="{% url 'responsable_anomalies' %}">Voir les anomalies</a></p>
+{% endblock %}

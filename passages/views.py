@@ -1,7 +1,13 @@
-from django.shortcuts import get_object_or_404, render
+import time
+
+from django.http import HttpResponseBadRequest, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_POST
 
 from accounts.permissions import role_requis
-from passages.models import Anomalie
+from passages import badges, services
+from passages.models import Anomalie, Badge
 from school.models import Eleve
 
 
@@ -42,3 +48,54 @@ def responsable_anomalies(request):
 @role_requis("agent")
 def agent_scan(request):
     return render(request, "passages/agent_scan.html")
+
+@role_requis("responsable")
+def responsable_eleves(request):
+    eleves = (
+        Eleve.objects.select_related("etablissement")
+        .prefetch_related("badges")
+        .order_by("classe", "nom")
+    )
+    return render(request, "passages/responsable_eleves.html", {"eleves": eleves})
+
+
+def _enfant_du_parent(request, eleve_id):
+    # Même cloisonnement que le détail : seuls les enfants du parent connecté existent.
+    return get_object_or_404(Eleve.objects.filter(parenteleve__parent=request.user), pk=eleve_id)
+
+
+@role_requis("parent")
+def parent_badge(request, eleve_id):
+    eleve = _enfant_du_parent(request, eleve_id)
+    return render(request, "passages/parent_badge.html", {"eleve": eleve})
+
+
+@role_requis("parent")
+@never_cache
+def parent_badge_code(request, eleve_id):
+    eleve = _enfant_du_parent(request, eleve_id)
+    badge = eleve.badges.filter(etat=Badge.Etat.ACTIF).first()
+    if badge is None:
+        return JsonResponse({"erreur": "Aucun badge actif."}, status=404)
+    return JsonResponse(
+        {"code": badges.generer_code(badge), "valide_secondes": badges.secondes_restantes()}
+    )
+
+
+@role_requis("responsable")
+@require_POST
+def responsable_emettre_badge(request, eleve_id):
+    eleve = get_object_or_404(Eleve, pk=eleve_id)
+    services.emettre_badge(eleve, request.user)
+    return redirect("responsable_eleves")
+
+
+@role_requis("responsable")
+@require_POST
+def responsable_changer_etat_badge(request, badge_id):
+    badge = get_object_or_404(Badge, pk=badge_id)
+    try:
+        services.changer_etat(badge, request.POST.get("etat", ""), request.user)
+    except services.TransitionInterdite:
+        return HttpResponseBadRequest("Changement d'état interdit.")
+    return redirect("responsable_eleves")

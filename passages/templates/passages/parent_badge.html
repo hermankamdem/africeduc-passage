@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block contenu %}
+<p><a href="{% url 'parent_enfant_detail' eleve.id %}">&larr; {{ eleve.nom }}</a></p>
+<h1>Badge de {{ eleve.nom }}</h1>
+<p>Ce code change toutes les 30 secondes. Une photo ne permet pas de l'utiliser plus tard.</p>
+<p id="statut">Chargement…</p>
+<pre id="code" style="word-break:break-all"></pre>
+<script>
+const URL_CODE = "{% url 'parent_badge_code' eleve.id %}";
+async function rafraichir() {
+  const statut = document.getElementById("statut");
+  const code = document.getElementById("code");
+  try {
+    const r = await fetch(URL_CODE, {cache: "no-store"});
+    if (!r.ok) { statut.textContent = "Aucun badge actif."; code.textContent = ""; return; }
+    const d = await r.json();
+    code.textContent = d.code;
+    statut.textContent = "Valide encore " + d.valide_secondes + " s";
+  } catch (e) {
+    statut.textContent = "Connexion indisponible.";
+  }
+}
+rafraichir();
+setInterval(rafraichir, 5000);
+</script>
+{% endblock %}

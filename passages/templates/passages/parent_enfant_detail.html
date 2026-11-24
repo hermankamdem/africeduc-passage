@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block contenu %}
 <p><a href="{% url 'parent_enfants' %}">&larr; Mes enfants</a></p>
-<h1>{{ eleve.nom }}</h1>
+<p><a href="{% url 'parent_badge' eleve.id %}">Afficher le badge</a></p>
 <h2>Passages</h2>
 <ul>
 {% for p in passages %}

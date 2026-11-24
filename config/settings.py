@@ -99,3 +99,7 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 CACHES = {
     "default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}
 }
+
+# --- Badges à code tournant ---
+BADGE_PAS_SECONDES = env.int("BADGE_PAS_SECONDES", default=30)
+BADGE_TOLERANCE_SECONDES = env.int("BADGE_TOLERANCE_SECONDES", default=60)
