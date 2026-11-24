@@ -53,3 +53,29 @@
 - Retenu : un décorateur unique `role_requis` appliqué à chaque vue, côté serveur.
 - Écarté : masquer des boutons dans l'interface.
 - Raison : l'interface n'est pas une barrière ; chaque vue vérifie le rôle elle-même.
+## D12 - Horloge fausse sur l'appareil
+- Retenu : la tablette envoie son heure à chaque lot ; le serveur calcule l'écart,
+  corrige l'heure du scan, enregistre l'heure brute, l'heure corrigée et l'écart. Si
+  l'écart dépasse 24 h, le passage est enregistré comme refusé (horloge_inexploitable).
+- Écartés : rejeter dès que l'horloge est fausse (on perdrait de vrais passages et on
+  punirait l'agent), et faire confiance à l'heure locale (données corrompues).
+- Limite connue : si l'agent change l'horloge pendant que des scans sont en file, ces scans
+  sont mal corrigés. Une horloge monotone serait la suite.
+
+## D13 - Confirmation de synchronisation
+- Retenu : la tablette ne retire de sa file que les scans confirmés par le serveur, par
+  lots de 5. Un lot renvoyé est reconnu par (appareil, identifiant d'événement).
+- Écarté : vider la file après l'envoi.
+- Raison : une réponse perdue ne doit ni perdre ni dupliquer de passage.
+
+## D14 - Refus différé et information de l'agent
+- Retenu : le code est vérifié par le serveur, donc un refus n'est connu qu'à la
+  synchronisation. L'agent voit seulement « accepté » ou « refusé », jamais le motif.
+- Écarté : stocker les secrets sur les tablettes pour vérifier hors ligne.
+- Raison : un secret volé sur une tablette permettrait de fabriquer des codes. L'agent ne
+  voit pas les anomalies (règle du sujet).
+
+## D15 - Saisie du code
+- Retenu : champ texte, compatible avec un lecteur de codes qui « tape » le code.
+- Non fait : lecture par la caméra et affichage d'un QR Code côté parent (à documenter
+  dans le README).

@@ -1,4 +1,4 @@
-import time
+import json
 
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -6,9 +6,9 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 
 from accounts.permissions import role_requis
-from passages import badges, services
+from passages import badges, services, sync
 from passages.models import Anomalie, Badge
-from school.models import Eleve
+from school.models import Eleve, PointControle
 
 
 @role_requis("parent")
@@ -99,3 +99,25 @@ def responsable_changer_etat_badge(request, badge_id):
     except services.TransitionInterdite:
         return HttpResponseBadRequest("Changement d'état interdit.")
     return redirect("responsable_eleves")
+@role_requis("agent")
+def agent_scan(request):
+    points = PointControle.objects.select_related("etablissement").order_by(
+        "etablissement__nom", "libelle"
+    )
+    return render(request, "passages/agent_scan.html", {"points": points})
+
+
+@role_requis("agent")
+@require_POST
+def agent_sync(request):
+    try:
+        resultats = sync.traiter_lot(json.loads(request.body))
+    except (ValueError, sync.LotInvalide):
+        return JsonResponse({"erreur": "Lot invalide."}, status=400)
+    return JsonResponse({"resultats": resultats})
+
+
+def service_worker(request):
+    reponse = render(request, "passages/sw.js", content_type="application/javascript")
+    reponse["Cache-Control"] = "no-cache"
+    return reponse

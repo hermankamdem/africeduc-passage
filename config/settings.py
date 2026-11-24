@@ -103,3 +103,6 @@ CACHES = {
 # --- Badges à code tournant ---
 BADGE_PAS_SECONDES = env.int("BADGE_PAS_SECONDES", default=30)
 BADGE_TOLERANCE_SECONDES = env.int("BADGE_TOLERANCE_SECONDES", default=60)
+
+# --- Synchronisation des scans ---
+HORLOGE_ECART_MAX_S = env.int("HORLOGE_ECART_MAX_S", default=86400)  # 24 h

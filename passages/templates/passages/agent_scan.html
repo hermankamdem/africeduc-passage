@@ -1,5 +1,156 @@
 {% extends "base.html" %}
+{% block titre %}Scan des badges{% endblock %}
 {% block contenu %}
 <h1>Scan des badges</h1>
-<p>Écran de scan : à venir (étape 5).</p>
+<p id="reseau"></p>
+<p>Appareil : <strong id="appareil"></strong></p>
+<p><label>Point de contrôle
+  <select id="point">
+    {% for p in points %}<option value="{{ p.id }}">{{ p.libelle }} ({{ p.etablissement.nom }})</option>{% endfor %}
+  </select></label></p>
+<form id="form-scan">
+  <p><label>Code du badge <input id="code" autocomplete="off" autofocus required maxlength="200"></label>
+  <button type="submit">Valider</button></p>
+</form>
+<p id="message" role="status"></p>
+<p>En attente : <strong id="en-attente">0</strong>
+   · Acceptés : <strong id="acceptes">0</strong>
+   · Refusés : <strong id="refuses">0</strong></p>
+<button type="button" id="sync">Synchroniser maintenant</button>
+
+<script>
+const CSRF = "{{ csrf_token }}";
+const URL_SYNC = "{% url 'agent_sync' %}";
+const TAILLE_LOT = 5;
+const $ = (id) => document.getElementById(id);
+let acceptes = 0, refuses = 0, enCours = false;
+
+function uuid() {
+  if (crypto.randomUUID) return crypto.randomUUID();
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = crypto.getRandomValues(new Uint8Array(1))[0] & 15;
+    return (c === "x" ? r : (r & 3) | 8).toString(16);
+  });
+}
+
+const APPAREIL = (() => {
+  let id = null;
+  try { id = localStorage.getItem("appareil_id"); } catch (e) {}
+  if (!id) {
+    id = "tab-" + uuid().slice(0, 8);
+    try { localStorage.setItem("appareil_id", id); } catch (e) {}
+  }
+  return id;
+})();
+$("appareil").textContent = APPAREIL;
+
+// --- File d'attente locale (IndexedDB) : survit à la fermeture de la page ---
+function ouvrirBase() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open("passage", 1);
+    req.onupgradeneeded = () =>
+      req.result.createObjectStore("file", { keyPath: "evenement_local" });
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function ecrire(fn) {
+  const db = await ouvrirBase();
+  return new Promise((resolve, reject) => {
+    const t = db.transaction("file", "readwrite");
+    fn(t.objectStore("file"));
+    t.oncomplete = () => { db.close(); resolve(); };
+    t.onerror = () => { db.close(); reject(t.error); };
+  });
+}
+async function lister() {
+  const db = await ouvrirBase();
+  return new Promise((resolve, reject) => {
+    const r = db.transaction("file").objectStore("file").getAll();
+    r.onsuccess = () => {
+      db.close();
+      resolve(r.result.sort((a, b) => a.heure_locale_ms - b.heure_locale_ms));
+    };
+    r.onerror = () => { db.close(); reject(r.error); };
+  });
+}
+
+async function majAffichage() {
+  $("en-attente").textContent = (await lister()).length;
+  $("acceptes").textContent = acceptes;
+  $("refuses").textContent = refuses;
+  $("reseau").textContent = navigator.onLine
+    ? "Réseau : disponible"
+    : "Réseau : hors ligne (les scans sont conservés sur l'appareil)";
+}
+const message = (t) => { $("message").textContent = t; };
+
+// --- Scan : toujours enregistré localement d'abord ---
+$("form-scan").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const champ = $("code");
+  const code = champ.value.trim();
+  if (!code) return;
+  await ecrire((st) => st.put({
+    evenement_local: uuid(),
+    code: code,
+    point_id: Number($("point").value),
+    heure_locale_ms: Date.now(),
+  }));
+  champ.value = "";
+  champ.focus();
+  message("Scan enregistré sur l'appareil.");
+  await majAffichage();
+  synchroniser();
+});
+
+// --- Synchronisation : on ne retire de la file que ce que le serveur a confirmé ---
+async function synchroniser() {
+  if (enCours) return;
+  enCours = true;
+  try {
+    const file = await lister();
+    for (let i = 0; i < file.length; i += TAILLE_LOT) {
+      const lot = file.slice(i, i + TAILLE_LOT);
+      const reponse = await fetch(URL_SYNC, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json", "X-CSRFToken": CSRF },
+        body: JSON.stringify({
+          appareil: APPAREIL,
+          appareil_envoye_ms: Date.now(),  // sert au serveur à mesurer l'écart d'horloge
+          scans: lot,
+        }),
+      });
+      if (reponse.redirected || reponse.status === 403) {
+        message("Session expirée : reconnectez-vous et rechargez la page. Vos scans sont conservés.");
+        break;
+      }
+      if (!reponse.ok) { message("Envoi impossible (code " + reponse.status + ")."); break; }
+      const donnees = await reponse.json();
+      for (const r of donnees.resultats) {
+        if (r.statut === "refuse") refuses++; else acceptes++;
+      }
+      await ecrire((st) => donnees.resultats.forEach((r) => st.delete(r.evenement_local)));
+      await majAffichage();
+    }
+  } catch (err) {
+    // Pas de réseau ou envoi interrompu : la file est intacte, on réessaiera.
+  } finally {
+    enCours = false;
+    await majAffichage();
+  }
+}
+
+$("sync").addEventListener("click", synchroniser);
+window.addEventListener("online", synchroniser);
+window.addEventListener("offline", majAffichage);
+setInterval(synchroniser, 15000);
+majAffichage();
+synchroniser();
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js", { scope: "/agent/" }).catch(() => {});
+}
+</script>
 {% endblock %}

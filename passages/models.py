@@ -48,6 +48,8 @@ class Passage(models.Model):
     point = models.ForeignKey("school.PointControle", on_delete=models.PROTECT)
     heure_locale = models.DateTimeField()                      # horloge de l'appareil
     heure_serveur = models.DateTimeField(auto_now_add=True)    # réception par le serveur
+    heure_corrigee = models.DateTimeField(null=True, blank=True)  # heure locale corrigée de l'écart
+    ecart_horloge_s = models.IntegerField(default=0)              # serveur - appareil, en secondes
     appareil = models.CharField(max_length=64)
     evenement_local = models.UUIDField()                       # identifiant généré par l'appareil
     etat_sync = models.CharField(max_length=10, choices=EtatSync.choices, default=EtatSync.RECU)

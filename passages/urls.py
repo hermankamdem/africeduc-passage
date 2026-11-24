@@ -8,8 +8,10 @@ urlpatterns = [
     path("responsable/eleves/", views.responsable_eleves, name="responsable_eleves"),
     path("responsable/anomalies/", views.responsable_anomalies, name="responsable_anomalies"),
     path("agent/scan/", views.agent_scan, name="agent_scan"),
-        path("parent/enfants/<int:eleve_id>/badge/", views.parent_badge, name="parent_badge"),
+    path("parent/enfants/<int:eleve_id>/badge/", views.parent_badge, name="parent_badge"),
     path("parent/enfants/<int:eleve_id>/badge/code/", views.parent_badge_code, name="parent_badge_code"),
     path("responsable/eleves/<int:eleve_id>/badge/emettre/", views.responsable_emettre_badge, name="responsable_emettre_badge"),
     path("responsable/badges/<int:badge_id>/etat/", views.responsable_changer_etat_badge, name="responsable_changer_etat_badge"),
+    path("agent/sync/", views.agent_sync, name="agent_sync"),
+    path("sw.js", views.service_worker, name="service_worker"),
 ]
