@@ -1,5 +1,11 @@
+
 # DECISIONS
 
+Les quatre questions posées par l'énoncé (section 3.6) :
+- Badge inutilisable par un tiers : D4 (et D11 pour la vérification hors ligne)
+- Passage enregistré une seule fois : D5 et D13
+- Heure locale fausse : D12
+- Détection d'une absence et cinquième anomalie : D16 et D6
 ## D1 - Framework serveur
 - Retenu : Django (SQLite par défaut, PostgreSQL possible via variable d'environnement)
 - Écarté : FastAPI
