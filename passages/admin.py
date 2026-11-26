@@ -1,6 +1,7 @@
+
 from django.contrib import admin
 
-from .models import Anomalie, Badge, JournalAudit, MessageSortant, Passage, Synthese
+from .models import Anomalie, Badge, AppelIA, JournalAudit, MessageSortant, Passage, Synthese
 
 
 @admin.register(Passage)
@@ -16,6 +17,4 @@ class PassageAdmin(admin.ModelAdmin):
 class MessageSortantAdmin(admin.ModelAdmin):
     list_display = ("parent", "anomalie", "etat", "motif_non_envoi", "cree_le")
     list_filter = ("etat", "motif_non_envoi")
-
-
-admin.site.register([Anomalie, Badge, JournalAudit, Synthese])
+admin.site.register([Anomalie, Badge, JournalAudit, Synthese, AppelIA])

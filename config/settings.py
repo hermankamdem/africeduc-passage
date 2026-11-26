@@ -114,3 +114,18 @@ ABSENCE_DELAI_GRACE_S = env.int("ABSENCE_DELAI_GRACE_S", default=600)
 # --- Messages aux parents ---
 MESSAGES_MAX_PAR_ELEVE_PAR_JOUR = env.int("MESSAGES_MAX_PAR_ELEVE_PAR_JOUR", default=3)
 SMS_FOURNISSEUR = env("SMS_FOURNISSEUR", default="passages.notifications.FournisseurConsole")
+
+# --- IA dans le produit ---
+def _nombre(nom, defaut):
+    brut = env.str(nom, default="").strip()
+    return float(brut) if brut else defaut
+
+
+ANTHROPIC_API_KEY = env.str("ANTHROPIC_API_KEY", default="").strip()
+AI_MODEL = env.str("AI_MODEL", default="claude-haiku-5-5")
+AI_TIMEOUT_S = _nombre("AI_TIMEOUT_S", 20.0)
+AI_PLAFOND_JOUR_FCFA = _nombre("AI_DAILY_BUDGET_FCFA", 500.0)
+# Tarifs en FCFA par million de tokens : des ordres de grandeur à régler selon le tarif réel.
+AI_PRIX_ENTREE_FCFA_MTOK = _nombre("AI_PRIX_ENTREE_FCFA_MTOK", 600.0)
+AI_PRIX_SORTIE_FCFA_MTOK = _nombre("AI_PRIX_SORTIE_FCFA_MTOK", 3000.0)
+AI_MAX_TOKENS_SORTIE = 300

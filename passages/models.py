@@ -131,7 +131,17 @@ class Synthese(models.Model):
     empreinte = models.CharField(max_length=64)   # hash des chiffres : évite de refacturer
     texte = models.TextField()
     origine = models.CharField(max_length=10, choices=Origine.choices)
+    # Chemin réellement emprunté : modele, modele_apres_nouvel_essai, gabarit_sans_cle,
+    # gabarit_erreur_service, gabarit_sortie_invalide, gabarit_plafond
+    chemin = models.CharField(max_length=30, default="gabarit_sans_cle")
     cree_le = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["etablissement", "classe", "date", "empreinte"], name="synthese_unique"
+            ),
+        ]
 
     class Meta:
         constraints = [
@@ -148,3 +158,14 @@ class JournalAudit(models.Model):
     action = models.CharField(max_length=50)
     cible = models.CharField(max_length=100, blank=True)
     cree_le = models.DateTimeField(auto_now_add=True)
+
+class AppelIA(models.Model):
+    """Journal de chaque appel au modèle : horodatage, modèle, volume, coût estimé."""
+
+    cree_le = models.DateTimeField(auto_now_add=True)
+    modele = models.CharField(max_length=60)
+    tokens_entree = models.PositiveIntegerField(default=0)
+    tokens_sortie = models.PositiveIntegerField(default=0)
+    cout_estime_fcfa = models.DecimalField(max_digits=12, decimal_places=4, default=0)
+    succes = models.BooleanField(default=True)
+    motif = models.CharField(max_length=100, blank=True)

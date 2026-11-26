@@ -131,3 +131,34 @@
   de famille, ni identifiant.
 - Raison : un SMS peut être lu par un tiers ; il faut qu'il reste compréhensible sans
   application et sans révéler où se trouve un mineur.
+  ## D24 - Qui calcule les chiffres de la synthèse
+- Retenu : le code calcule les chiffres (effectif, présents, absents, anomalies par type)
+  depuis la base ; le modèle ne reçoit que ces chiffres, sans nom d'élève, et ne fait que rédiger.
+- Écarté : donner la liste brute des passages au modèle et lui demander de compter.
+- Raison : un modèle de langage compte mal et peut inventer ; un test compare les nombres du texte
+  à ceux de la base.
+
+## D25 - Validation de la sortie du modèle
+- Retenu : réponse JSON stricte {"texte": ...}, longueur bornée, tout nombre du texte doit
+  appartenir aux chiffres calculés (ou à la date et à la classe), et présents et effectif
+  doivent apparaître. Une seule nouvelle tentative, puis gabarit. Le chemin pris est stocké.
+- Limite connue : un nombre écrit en toutes lettres ("trois") n'est pas contrôlé ; le prompt
+  demande des chiffres, mais ce n'est pas une garantie.
+
+## D26 - Coût et plafond
+- Retenu : chaque appel est journalisé (modèle, tokens, coût estimé). Avant chaque appel,
+  une estimation prudente est ajoutée à la dépense du jour : si elle dépasse le plafond
+  configurable, aucun appel n'est fait et le gabarit est utilisé, avec un message clair.
+- Limite connue : le coût est estimé avec des tarifs configurés à la main, pas lu depuis
+  une facture.
+
+## D27 - Deux demandes identiques
+- Retenu : une empreinte (établissement, classe, date, chiffres) ; si une synthèse produite
+  par le modèle existe déjà, elle est renvoyée sans nouvel appel.
+- Raison : cliquer deux fois ne coûte pas deux fois. Si les chiffres changent, l'empreinte
+  change et une nouvelle synthèse est produite.
+
+## D28 - Classes portant le même nom
+- Retenu : la synthèse choisit le premier établissement qui possède la classe demandée.
+- Limite connue : avec plusieurs établissements, il faudrait choisir l'établissement ; le
+  périmètre du test n'en contient qu'un.

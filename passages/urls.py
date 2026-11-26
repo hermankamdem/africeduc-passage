@@ -14,4 +14,5 @@ urlpatterns = [
     path("responsable/badges/<int:badge_id>/etat/", views.responsable_changer_etat_badge, name="responsable_changer_etat_badge"),
     path("agent/sync/", views.agent_sync, name="agent_sync"),
     path("sw.js", views.service_worker, name="service_worker"),
+    path("responsable/synthese/", views.responsable_synthese, name="responsable_synthese"),
 ]

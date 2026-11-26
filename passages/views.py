@@ -2,14 +2,15 @@ import json
 
 from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods, require_POST
 
 from accounts.permissions import role_requis
 from passages import badges, services, sync
-from passages.models import Anomalie, Badge
+from passages import synthese as synthese_service
+from passages.models import Anomalie, Badge, JournalAudit
 from school.models import Eleve, PointControle
-
 
 @role_requis("parent")
 def parent_enfants(request):
@@ -121,3 +122,38 @@ def service_worker(request):
     reponse = render(request, "passages/sw.js", content_type="application/javascript")
     reponse["Cache-Control"] = "no-cache"
     return reponse
+
+MESSAGES_CHEMIN = {
+    "modele": "Rédigée par le modèle de langage.",
+    "modele_apres_nouvel_essai": "Rédigée par le modèle de langage (deuxième essai).",
+    "gabarit_sans_cle": "Mode dégradé : aucune clé d'IA configurée, gabarit utilisé.",
+    "gabarit_erreur_service": "Mode dégradé : le service d'IA est indisponible, gabarit utilisé.",
+    "gabarit_sortie_invalide": "Mode dégradé : la réponse du modèle n'était pas conforme, gabarit utilisé.",
+    "gabarit_plafond": "Mode dégradé : le plafond de dépense quotidien est atteint, gabarit utilisé.",
+}
+
+
+@role_requis("responsable")
+@require_http_methods(["GET", "POST"])
+def responsable_synthese(request):
+    classes = list(Eleve.objects.order_by("classe").values_list("classe", flat=True).distinct())
+    contexte = {"classes": classes, "aujourdhui": timezone.localdate().isoformat()}
+    if request.method == "POST":
+        classe = request.POST.get("classe", "")
+        try:
+            jour = timezone.datetime.fromisoformat(request.POST.get("date", "")).date()
+        except ValueError:
+            contexte["erreur"] = "Date invalide."
+            return render(request, "passages/responsable_synthese.html", contexte, status=400)
+        if classe not in classes:
+            contexte["erreur"] = "Classe inconnue."
+            return render(request, "passages/responsable_synthese.html", contexte, status=400)
+        eleve = Eleve.objects.filter(classe=classe).select_related("etablissement").first()
+        synthese = synthese_service.generer_synthese(eleve.etablissement, classe, jour)
+        JournalAudit.objects.create(
+            utilisateur=request.user, action="synthese_consultee", cible=f"{classe}:{jour.isoformat()}"
+        )
+        contexte.update(
+            synthese=synthese, explication=MESSAGES_CHEMIN.get(synthese.chemin, ""), classe=classe, jour=jour
+        )
+    return render(request, "passages/responsable_synthese.html", contexte)
