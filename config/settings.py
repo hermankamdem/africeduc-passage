@@ -48,6 +48,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                 'config.context_processors.marque',
             ],
         },
     },
@@ -129,3 +130,5 @@ AI_PLAFOND_JOUR_FCFA = _nombre("AI_DAILY_BUDGET_FCFA", 500.0)
 AI_PRIX_ENTREE_FCFA_MTOK = _nombre("AI_PRIX_ENTREE_FCFA_MTOK", 600.0)
 AI_PRIX_SORTIE_FCFA_MTOK = _nombre("AI_PRIX_SORTIE_FCFA_MTOK", 3000.0)
 AI_MAX_TOKENS_SORTIE = 300
+# --- Nom affiché de l'application ---
+APP_NAME = env.str("APP_NAME", default="HK_checking")

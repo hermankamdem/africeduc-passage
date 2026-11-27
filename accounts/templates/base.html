@@ -3,9 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block titre %}Passage{% endblock %}</title>
+  <title>{% block titre %}Suivi des passages{% endblock %} - {{ APP_NAME }}</title>
 </head>
 <body>
+<header><a href="{% url 'accueil' %}"><strong>{{ APP_NAME }}</strong></a></header>
 {% if user.is_authenticated %}
   <form method="post" action="{% url 'deconnexion' %}">
     {% csrf_token %}
